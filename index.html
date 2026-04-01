@@ -46,7 +46,6 @@
             <h1 class="text-3xl font-bold tracking-widest text-green-400">33OYUN</h1>
         </div>
 
-        <!-- Hamburger Menü -->
         <div class="flex items-center gap-4">
             <button onclick="toggleMobileMenu()" class="md:hidden text-4xl">☰</button>
             
@@ -65,10 +64,8 @@
         <div class="flex flex-col px-6 space-y-4 text-lg">
             <button onclick="showSection(0); toggleMobileMenu()" class="text-left py-3 hover:bg-zinc-800 rounded-2xl">🏠 Ana Sayfa</button>
             <button onclick="showSection(1); toggleMobileMenu()" class="text-left py-3 hover:bg-zinc-800 rounded-2xl">🎲 Oyunlar</button>
-            <button onclick="showSection(2); toggleMobileMenu()" class="text-left py-3 hover:bg-zinc-800 rounded-2xl">💸 Para İşlemleri</button>
-            <button onclick="showBalanceModal(); toggleMobileMenu()" class="text-left py-3 hover:bg-zinc-800 rounded-2xl flex items-center gap-3">
-                💰 Bakiyem: <span id="mobileBalance" class="text-green-400">0 TL</span>
-            </button>
+            <button onclick="showSection(2); toggleMobileMenu()" class="text-left py-3 hover:bg-zinc-800 rounded-2xl">💸 Para</button>
+            <button onclick="showBalanceModal(); toggleMobileMenu()" class="text-left py-3 hover:bg-zinc-800 rounded-2xl">💰 Bakiyem</button>
         </div>
     </div>
 
@@ -101,22 +98,22 @@
                 <div onclick="startGame(1)" class="game-card bg-zinc-900 rounded-3xl p-8 border-2 border-green-500 cursor-pointer text-center">
                     <div class="text-8xl mb-6">✊✋✌️</div>
                     <h3 class="text-2xl font-bold">Taş Kağıt Makas</h3>
-                    <p class="text-zinc-400">Kazan +25 TL</p>
+                    <p class="text-zinc-400">+25 TL</p>
                 </div>
                 <div onclick="startGame(2)" class="game-card bg-zinc-900 rounded-3xl p-8 border-2 border-green-500 cursor-pointer text-center">
                     <div class="text-8xl mb-6">🎯</div>
                     <h3 class="text-2xl font-bold">Sayı Tahmin</h3>
-                    <p class="text-zinc-400">Kazan +30 TL</p>
+                    <p class="text-zinc-400">+30 TL</p>
                 </div>
                 <div onclick="startGame(3)" class="game-card bg-zinc-900 rounded-3xl p-8 border-2 border-green-500 cursor-pointer text-center">
                     <div class="text-8xl mb-6">❌⭕</div>
                     <h3 class="text-2xl font-bold">Tic Tac Toe</h3>
-                    <p class="text-zinc-400">Kazan +25 TL</p>
+                    <p class="text-zinc-400">+25 TL</p>
                 </div>
                 <div onclick="startGame(4)" class="game-card bg-zinc-900 rounded-3xl p-8 border-2 border-green-500 cursor-pointer text-center">
                     <div class="text-8xl mb-6">🎲</div>
                     <h3 class="text-2xl font-bold">Zar Atma</h3>
-                    <p class="text-zinc-400">Kazan +20 TL</p>
+                    <p class="text-zinc-400">+20 TL</p>
                 </div>
             </div>
         </div>
@@ -274,11 +271,11 @@ function loadPlayersFromFirebase() {
     });
 }
 
-function updatePlayerInFirebase() {
-    if (currentPlayer) {
-        playersRef.child(currentPlayer.id).update({
-            balance: currentPlayer.balance,
-            wins: currentPlayer.wins || 0
+function updatePlayerInFirebase(player) {
+    if (player) {
+        playersRef.child(player.id).update({
+            balance: player.balance,
+            wins: player.wins || 0
         });
     }
 }
@@ -370,24 +367,30 @@ function renderAdminTable() {
 window.adminAdd = function(id) {
     const amt = parseInt(document.getElementById('add' + id).value);
     if (!amt || amt <= 0) return alert("Geçerli miktar girin!");
+    
     const p = players.find(pl => pl.id === id);
     if (p) {
         p.balance += amt;
-        updatePlayerInFirebase();
+        updatePlayerInFirebase(p);
         renderAdminTable();
-        if (currentPlayer && currentPlayer.id === id) renderCurrentPlayer();
+        if (currentPlayer && currentPlayer.id === id) {
+            renderCurrentPlayer();
+        }
     }
 };
 
 window.adminSubtract = function(id) {
     const amt = parseInt(document.getElementById('sub' + id).value);
     if (!amt || amt <= 0) return alert("Geçerli miktar girin!");
+    
     const p = players.find(pl => pl.id === id);
     if (p && p.balance >= amt) {
         p.balance -= amt;
-        updatePlayerInFirebase();
+        updatePlayerInFirebase(p);
         renderAdminTable();
-        if (currentPlayer && currentPlayer.id === id) renderCurrentPlayer();
+        if (currentPlayer && currentPlayer.id === id) {
+            renderCurrentPlayer();
+        }
     }
 };
 
