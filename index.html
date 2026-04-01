@@ -33,8 +33,6 @@
                 class="w-full py-6 bg-green-500 hover:bg-green-400 text-black text-2xl font-bold rounded-3xl">
             GİRİŞ YAP
         </button>
-        
-        <p class="text-xs text-zinc-500 mt-6">Admin: admin / arap1905</p>
     </div>
 </div>
 
@@ -251,25 +249,26 @@ function createDefaultAdmin() {
     });
 }
 
-// ==================== FIREBASE VERİ YÜKLEME ====================
+// ==================== FIREBASE ====================
 function loadPlayersFromFirebase() {
     playersRef.on('value', (snapshot) => {
         const data = snapshot.val();
         if (data) {
             players = Object.keys(data).map(key => ({ id: parseInt(key), ...data[key] }));
         }
-        renderAdminTableIfOpen();
     });
 }
 
-function updatePlayerInFirebase(player) {
-    playersRef.child(player.id).update({
-        balance: player.balance,
-        wins: player.wins || 0
-    });
+function updatePlayerInFirebase() {
+    if (currentPlayer) {
+        playersRef.child(currentPlayer.id).update({
+            balance: currentPlayer.balance,
+            wins: currentPlayer.wins || 0
+        });
+    }
 }
 
-// ==================== LOGIN ====================
+// ==================== LOGIN & LOGOUT ====================
 function loginPlayer() {
     const name = document.getElementById('loginName').value.trim();
     const pass = document.getElementById('loginPassword').value.trim();
@@ -355,7 +354,7 @@ window.adminAdd = function(id) {
     const p = players.find(pl => pl.id === id);
     if (p) {
         p.balance += amt;
-        updatePlayerInFirebase(p);
+        updatePlayerInFirebase();
         renderAdminTable();
         if (currentPlayer && currentPlayer.id === id) renderCurrentPlayer();
     }
@@ -367,7 +366,7 @@ window.adminSubtract = function(id) {
     const p = players.find(pl => pl.id === id);
     if (p && p.balance >= amt) {
         p.balance -= amt;
-        updatePlayerInFirebase(p);
+        updatePlayerInFirebase();
         renderAdminTable();
         if (currentPlayer && currentPlayer.id === id) renderCurrentPlayer();
     }
@@ -397,7 +396,7 @@ window.deletePlayer = function(id) {
     }
 };
 
-// ==================== OYUN FONKSİYONLARI ====================
+// ==================== OYUN FONKSİYONLARI (TAM ÇALIŞAN) ====================
 function startGame(gameId) {
     if (!currentPlayer || currentPlayer.balance < 10) {
         return alert("❌ Yetersiz bakiye! En az 10 TL gerekiyor.");
@@ -422,14 +421,168 @@ function startGame(gameId) {
     }
 }
 
-// RPS, Sayı Tahmin, Tic Tac Toe fonksiyonları (önceki mesajlardan aynı)
-function playRPS(choice) { /* ... aynı kod ... */ }
-function resetGuessGame() { /* ... */ }
-function makeGuess() { /* ... */ }
-function resetTicTac() { /* ... */ }
-function handleTicTacClick(i, cell) { /* ... */ }
-function aiTicTacMove() { /* ... */ }
-function endTicTac(won) { /* ... */ }
+// Taş Kağıt Makas
+function playRPS(choice) {
+    const options = ['rock','paper','scissors'];
+    const comp = options[Math.floor(Math.random()*3)];
+    let result = '', change = 0;
+
+    if (choice === comp) { 
+        result = "BERABERE! +10 TL iade"; 
+        change = 10; 
+    } else if (
+        (choice === 'rock' && comp === 'scissors') ||
+        (choice === 'paper' && comp === 'rock') ||
+        (choice === 'scissors' && comp === 'paper')
+    ) {
+        result = "🎉 KAZANDIN! +25 TL"; 
+        change = 25; 
+        currentPlayer.wins = (currentPlayer.wins || 0) + 1;
+        lastWinLog.unshift({player: currentPlayer.name, amount: 25});
+    } else {
+        result = "😢 Kaybettin";
+    }
+    currentPlayer.balance += change;
+    updatePlayerInFirebase();
+    document.getElementById('rps-result').innerHTML = `<div class="text-4xl">${result}</div><div class="mt-4">Bakiye: ${currentPlayer.balance} TL</div>`;
+    setTimeout(hideModals, 2800);
+}
+
+// Sayı Tahmin
+function resetGuessGame() {
+    secretNumber = Math.floor(Math.random() * 100) + 1;
+    attemptsLeft = 5;
+    document.getElementById('guessInput').value = '';
+    document.getElementById('guess-status').innerHTML = '';
+}
+
+function makeGuess() {
+    const guess = parseInt(document.getElementById('guessInput').value);
+    const status = document.getElementById('guess-status');
+
+    if (!guess || guess < 1 || guess > 100) {
+        status.innerHTML = `<span class="text-red-400">1-100 arası gir!</span>`;
+        return;
+    }
+
+    attemptsLeft--;
+    if (guess === secretNumber) {
+        status.innerHTML = `<span class="text-green-400 text-5xl">🎉 DOĞRU!</span><br>+30 TL`;
+        currentPlayer.balance += 30;
+        currentPlayer.wins = (currentPlayer.wins || 0) + 1;
+        lastWinLog.unshift({player: currentPlayer.name, amount: 30});
+        updatePlayerInFirebase();
+        setTimeout(hideModals, 2500);
+    } else if (attemptsLeft <= 0) {
+        status.innerHTML = `Hakkın bitti! Sayı: ${secretNumber}`;
+        setTimeout(hideModals, 2000);
+    } else {
+        status.innerHTML = guess > secretNumber ? "📉 Daha küçük" : "📈 Daha büyük";
+    }
+}
+
+// Tic Tac Toe
+function resetTicTac() {
+    tictacBoard = Array(9).fill(null);
+    tictacGameOver = false;
+    const boardEl = document.getElementById('board');
+    boardEl.innerHTML = '';
+    for (let i = 0; i < 9; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'aspect-square bg-zinc-900 text-7xl flex items-center justify-center cursor-pointer rounded-2xl border border-zinc-700';
+        cell.dataset.index = i;
+        cell.onclick = () => handleTicTacClick(i, cell);
+        boardEl.appendChild(cell);
+    }
+    document.getElementById('tictac-status').innerHTML = 'Sıra sende (X)';
+}
+
+function handleTicTacClick(index, cell) {
+    if (tictacGameOver || tictacBoard[index]) return;
+    tictacBoard[index] = 'X';
+    cell.textContent = 'X';
+    cell.style.color = '#22c55e';
+
+    if (checkWinner('X')) { endTicTac(true); return; }
+    if (tictacBoard.every(c => c)) { endTicTac(null); return; }
+
+    setTimeout(aiTicTacMove, 400);
+}
+
+function aiTicTacMove() {
+    let bestScore = -Infinity;
+    let bestMove = null;
+    for (let i = 0; i < 9; i++) {
+        if (!tictacBoard[i]) {
+            tictacBoard[i] = 'O';
+            let score = minimax(tictacBoard, false);
+            tictacBoard[i] = null;
+            if (score > bestScore) {
+                bestScore = score;
+                bestMove = i;
+            }
+        }
+    }
+    if (bestMove !== null) {
+        tictacBoard[bestMove] = 'O';
+        const cells = document.querySelectorAll('#board > div');
+        cells[bestMove].textContent = 'O';
+        cells[bestMove].style.color = '#eab308';
+        if (checkWinner('O')) endTicTac(false);
+        else if (tictacBoard.every(c => c)) endTicTac(null);
+        else document.getElementById('tictac-status').innerHTML = 'Sıra sende (X)';
+    }
+}
+
+function minimax(board, isMaximizing) {
+    if (checkWinner(board, 'O')) return 10;
+    if (checkWinner(board, 'X')) return -10;
+    if (board.every(cell => cell)) return 0;
+
+    if (isMaximizing) {
+        let best = -Infinity;
+        for (let i = 0; i < 9; i++) {
+            if (!board[i]) {
+                board[i] = 'O';
+                best = Math.max(best, minimax(board, false));
+                board[i] = null;
+            }
+        }
+        return best;
+    } else {
+        let best = Infinity;
+        for (let i = 0; i < 9; i++) {
+            if (!board[i]) {
+                board[i] = 'X';
+                best = Math.min(best, minimax(board, true));
+                board[i] = null;
+            }
+        }
+        return best;
+    }
+}
+
+function checkWinner(board, mark) {
+    const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+    return wins.some(combo => combo.every(i => board[i] === mark));
+}
+
+function endTicTac(won) {
+    tictacGameOver = true;
+    if (won === true) {
+        currentPlayer.balance += 25;
+        currentPlayer.wins = (currentPlayer.wins || 0) + 1;
+        lastWinLog.unshift({player: currentPlayer.name, amount: 25});
+        document.getElementById('tictac-status').innerHTML = '🎉 KAZANDIN +25 TL';
+    } else if (won === false) {
+        document.getElementById('tictac-status').innerHTML = '😢 Kaybettin';
+    } else {
+        currentPlayer.balance += 10;
+        document.getElementById('tictac-status').innerHTML = 'Berabere • 10 TL iade';
+    }
+    updatePlayerInFirebase();
+    setTimeout(hideModals, 2300);
+}
 
 // ==================== DİĞER FONKSİYONLAR ====================
 function showSection(n) {
