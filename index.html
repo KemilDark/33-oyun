@@ -13,8 +13,6 @@
         .game-card:hover { transform: scale(1.08) translateY(-8px); box-shadow: 0 0 40px #22c55e; }
         .modal { animation: modalPop 0.4s ease; }
         @keyframes modalPop { from { transform: scale(0.8) translateY(40px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
-        .balance-live { animation: pulse 2s infinite; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
     </style>
 </head>
 <body class="bg-zinc-950 text-white min-h-screen">
@@ -47,24 +45,34 @@
             <div class="w-12 h-12 bg-green-500 text-black rounded-3xl flex items-center justify-center text-4xl">🎮</div>
             <h1 class="text-3xl font-bold tracking-widest text-green-400">33OYUN</h1>
         </div>
+
+        <!-- Hamburger Menü -->
         <div class="flex items-center gap-4">
-            <div onclick="showBalanceModal()" class="flex items-center gap-3 bg-zinc-900 hover:bg-green-500 hover:text-black px-6 py-3 rounded-3xl border-2 border-green-500 cursor-pointer balance-live">
+            <button onclick="toggleMobileMenu()" class="md:hidden text-4xl">☰</button>
+            
+            <div onclick="showBalanceModal()" class="hidden md:flex items-center gap-3 bg-zinc-900 hover:bg-green-500 hover:text-black px-6 py-3 rounded-3xl border-2 border-green-500 cursor-pointer">
                 <span class="text-3xl">💰</span>
                 <div><span id="currentBalance" class="text-3xl font-bold text-green-400">0</span><span class="text-xs block">TL</span></div>
             </div>
+
             <button onclick="showAdminLogin()" class="bg-yellow-400 hover:bg-yellow-300 text-black px-6 py-3 rounded-3xl font-bold">👑 ADMIN</button>
             <button onclick="logout()" class="bg-red-500 hover:bg-red-400 px-6 py-3 rounded-3xl font-bold">ÇIKIŞ</button>
         </div>
     </div>
 
-    <div class="max-w-6xl mx-auto px-4 py-8">
-        <!-- NAV -->
-        <div class="flex justify-center gap-3 mb-10 bg-zinc-900 p-2 rounded-3xl w-fit mx-auto">
-            <button onclick="showSection(0)" id="nav-0" class="nav-btn px-10 py-4 rounded-3xl font-bold active">🏠 ANA SAYFA</button>
-            <button onclick="showSection(1)" id="nav-1" class="nav-btn px-10 py-4 rounded-3xl font-bold">🎲 OYUNLAR</button>
-            <button onclick="showSection(2)" id="nav-2" class="nav-btn px-10 py-4 rounded-3xl font-bold">💸 PARA</button>
+    <!-- MOBİL MENÜ -->
+    <div id="mobileMenu" class="hidden md:hidden bg-zinc-900 border-b border-green-500 py-4">
+        <div class="flex flex-col px-6 space-y-4 text-lg">
+            <button onclick="showSection(0); toggleMobileMenu()" class="text-left py-3 hover:bg-zinc-800 rounded-2xl">🏠 Ana Sayfa</button>
+            <button onclick="showSection(1); toggleMobileMenu()" class="text-left py-3 hover:bg-zinc-800 rounded-2xl">🎲 Oyunlar</button>
+            <button onclick="showSection(2); toggleMobileMenu()" class="text-left py-3 hover:bg-zinc-800 rounded-2xl">💸 Para İşlemleri</button>
+            <button onclick="showBalanceModal(); toggleMobileMenu()" class="text-left py-3 hover:bg-zinc-800 rounded-2xl flex items-center gap-3">
+                💰 Bakiyem: <span id="mobileBalance" class="text-green-400">0 TL</span>
+            </button>
         </div>
+    </div>
 
+    <div class="max-w-6xl mx-auto px-4 py-8">
         <!-- ANA SAYFA -->
         <div id="section-0" class="section">
             <div class="text-center mb-12">
@@ -90,25 +98,25 @@
         <div id="section-1" class="section hidden">
             <h2 class="text-4xl font-bold text-center mb-10 text-green-400">🎲 OYUNLAR (10 TL Giriş)</h2>
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div onclick="startGame(1)" class="game-card bg-zinc-900 rounded-3xl p-6 border-2 border-green-500 cursor-pointer text-center">
-                    <div class="text-7xl mb-4">✊✋✌️</div>
+                <div onclick="startGame(1)" class="game-card bg-zinc-900 rounded-3xl p-8 border-2 border-green-500 cursor-pointer text-center">
+                    <div class="text-8xl mb-6">✊✋✌️</div>
                     <h3 class="text-2xl font-bold">Taş Kağıt Makas</h3>
-                    <p class="text-zinc-400 text-sm">+25 TL</p>
+                    <p class="text-zinc-400">Kazan +25 TL</p>
                 </div>
-                <div onclick="startGame(2)" class="game-card bg-zinc-900 rounded-3xl p-6 border-2 border-green-500 cursor-pointer text-center">
-                    <div class="text-7xl mb-4">🎯</div>
+                <div onclick="startGame(2)" class="game-card bg-zinc-900 rounded-3xl p-8 border-2 border-green-500 cursor-pointer text-center">
+                    <div class="text-8xl mb-6">🎯</div>
                     <h3 class="text-2xl font-bold">Sayı Tahmin</h3>
-                    <p class="text-zinc-400 text-sm">+30 TL</p>
+                    <p class="text-zinc-400">Kazan +30 TL</p>
                 </div>
-                <div onclick="startGame(3)" class="game-card bg-zinc-900 rounded-3xl p-6 border-2 border-green-500 cursor-pointer text-center">
-                    <div class="text-7xl mb-4">❌⭕</div>
+                <div onclick="startGame(3)" class="game-card bg-zinc-900 rounded-3xl p-8 border-2 border-green-500 cursor-pointer text-center">
+                    <div class="text-8xl mb-6">❌⭕</div>
                     <h3 class="text-2xl font-bold">Tic Tac Toe</h3>
-                    <p class="text-zinc-400 text-sm">+25 TL</p>
+                    <p class="text-zinc-400">Kazan +25 TL</p>
                 </div>
-                <div onclick="startGame(4)" class="game-card bg-zinc-900 rounded-3xl p-6 border-2 border-green-500 cursor-pointer text-center">
-                    <div class="text-7xl mb-4">🎲</div>
+                <div onclick="startGame(4)" class="game-card bg-zinc-900 rounded-3xl p-8 border-2 border-green-500 cursor-pointer text-center">
+                    <div class="text-8xl mb-6">🎲</div>
                     <h3 class="text-2xl font-bold">Zar Atma</h3>
-                    <p class="text-zinc-400 text-sm">+20 TL</p>
+                    <p class="text-zinc-400">Kazan +20 TL</p>
                 </div>
             </div>
         </div>
@@ -125,13 +133,9 @@
 </div>
 
 <!-- OYUN MODALLARI -->
-<!-- RPS -->
 <div id="modal-rps" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center z-[9999]">
-    <div class="modal bg-zinc-900 rounded-3xl p-8 max-w-lg w-full mx-4 text-center" onclick="event.stopImmediatePropagation()">
-        <div class="flex justify-between items-center mb-6">
-            <h3 class="text-3xl">✊ Taş Kağıt Makas</h3>
-            <span id="liveBalanceRPS" class="text-green-400 font-bold"></span>
-        </div>
+    <div class="modal bg-zinc-900 rounded-3xl p-10 max-w-lg w-full mx-4 text-center" onclick="event.stopImmediatePropagation()">
+        <h3 class="text-3xl mb-8">✊ Taş Kağıt Makas</h3>
         <div class="flex justify-center gap-12 text-8xl mb-10">
             <button onclick="playRPS('rock')" class="hover:scale-125 transition">✊</button>
             <button onclick="playRPS('paper')" class="hover:scale-125 transition">✋</button>
@@ -141,13 +145,9 @@
     </div>
 </div>
 
-<!-- Sayı Tahmin -->
 <div id="modal-guess" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center z-[9999]">
-    <div class="modal bg-zinc-900 rounded-3xl p-8 max-w-md w-full mx-4 text-center" onclick="event.stopImmediatePropagation()">
-        <div class="flex justify-between mb-4">
-            <h3 class="text-3xl">🎯 Sayı Tahmin</h3>
-            <span id="liveBalanceGuess" class="text-green-400 font-bold"></span>
-        </div>
+    <div class="modal bg-zinc-900 rounded-3xl p-10 max-w-md w-full mx-4 text-center" onclick="event.stopImmediatePropagation()">
+        <h3 class="text-3xl mb-6">🎯 Sayı Tahmin</h3>
         <div class="flex gap-4">
             <input id="guessInput" type="number" min="1" max="100" class="flex-1 bg-black text-6xl text-center rounded-3xl p-6">
             <button onclick="makeGuess()" class="bg-green-500 text-black px-12 rounded-3xl font-bold">TAHMİN</button>
@@ -156,14 +156,10 @@
     </div>
 </div>
 
-<!-- Tic Tac Toe -->
 <div id="modal-tictac" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center z-[9999]">
     <div class="modal bg-zinc-900 rounded-3xl p-8 max-w-md w-full mx-4" onclick="event.stopImmediatePropagation()">
-        <div class="flex justify-between mb-4">
-            <h3 class="text-3xl">❌ Tic Tac Toe</h3>
-            <span id="liveBalanceTic" class="text-green-400 font-bold"></span>
-        </div>
-        <div id="tictac-status" class="text-center text-green-400 mb-4"></div>
+        <h3 class="text-3xl mb-4">❌ Tic Tac Toe</h3>
+        <div id="tictac-status" class="text-center text-green-400 mb-6"></div>
         <div id="board" class="grid grid-cols-3 gap-3 bg-black p-4 rounded-3xl"></div>
         <div class="flex gap-4 mt-8">
             <button onclick="resetTicTac()" class="flex-1 py-5 bg-zinc-800 rounded-3xl">YENİ OYUN</button>
@@ -172,7 +168,6 @@
     </div>
 </div>
 
-<!-- Zar Atma Oyunu -->
 <div id="modal-dice" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center z-[9999]">
     <div class="modal bg-zinc-900 rounded-3xl p-10 max-w-md w-full mx-4 text-center" onclick="event.stopImmediatePropagation()">
         <h3 class="text-3xl mb-8">🎲 Zar Atma</h3>
@@ -208,8 +203,6 @@
                 <button onclick="addNewPlayer()" class="bg-green-500 hover:bg-green-400 text-black px-10 py-5 rounded-3xl font-bold">EKLE</button>
             </div>
         </div>
-
-        <div class="mb-4 text-green-400 font-bold">Toplam Sistem Bakiyesi: <span id="totalSystemBalance" class="text-2xl"></span> TL</div>
 
         <table class="w-full">
             <thead>
@@ -258,10 +251,9 @@ let lastWinLog = [];
 
 // ==================== OTOMATİK ADMIN EKLEME ====================
 function createDefaultAdmin() {
-    const adminRef = playersRef.child("1");
-    adminRef.once('value', (snapshot) => {
+    playersRef.child("1").once('value', (snapshot) => {
         if (!snapshot.exists()) {
-            adminRef.set({
+            playersRef.child("1").set({
                 id: 1,
                 name: "admin",
                 password: "arap1905",
@@ -279,7 +271,6 @@ function loadPlayersFromFirebase() {
         if (data) {
             players = Object.keys(data).map(key => ({ id: parseInt(key), ...data[key] }));
         }
-        updateTotalSystemBalance();
     });
 }
 
@@ -292,13 +283,7 @@ function updatePlayerInFirebase() {
     }
 }
 
-function updateTotalSystemBalance() {
-    const total = players.reduce((sum, p) => sum + (p.balance || 0), 0);
-    const el = document.getElementById('totalSystemBalance');
-    if (el) el.textContent = total;
-}
-
-// ==================== LOGIN & LOGOUT ====================
+// ==================== LOGIN ====================
 function loginPlayer() {
     const name = document.getElementById('loginName').value.trim();
     const pass = document.getElementById('loginPassword').value.trim();
@@ -325,9 +310,13 @@ function logout() {
         localStorage.removeItem('currentPlayerId');
         document.getElementById('mainApp').classList.add('hidden');
         document.getElementById('loginScreen').classList.remove('hidden');
-        document.getElementById('loginName').value = '';
-        document.getElementById('loginPassword').value = '';
     }
+}
+
+// ==================== HAMBURGER MENÜ ====================
+function toggleMobileMenu() {
+    const menu = document.getElementById('mobileMenu');
+    menu.classList.toggle('hidden');
 }
 
 // ==================== ADMIN PANEL ====================
@@ -376,7 +365,6 @@ function renderAdminTable() {
         `;
         tbody.appendChild(tr);
     });
-    updateTotalSystemBalance();
 }
 
 window.adminAdd = function(id) {
@@ -385,7 +373,7 @@ window.adminAdd = function(id) {
     const p = players.find(pl => pl.id === id);
     if (p) {
         p.balance += amt;
-        updatePlayerInFirebase(p);
+        updatePlayerInFirebase();
         renderAdminTable();
         if (currentPlayer && currentPlayer.id === id) renderCurrentPlayer();
     }
@@ -397,7 +385,7 @@ window.adminSubtract = function(id) {
     const p = players.find(pl => pl.id === id);
     if (p && p.balance >= amt) {
         p.balance -= amt;
-        updatePlayerInFirebase(p);
+        updatePlayerInFirebase();
         renderAdminTable();
         if (currentPlayer && currentPlayer.id === id) renderCurrentPlayer();
     }
@@ -438,17 +426,15 @@ function startGame(gameId) {
     renderCurrentPlayer();
 
     if (gameId === 1) {
-        updateLiveBalance('RPS');
+        document.getElementById('rps-result').innerHTML = "Seçimini yap!";
         document.getElementById('modal-rps').classList.remove('hidden');
         document.getElementById('modal-rps').classList.add('flex');
     } else if (gameId === 2) {
         resetGuessGame();
-        updateLiveBalance('Guess');
         document.getElementById('modal-guess').classList.remove('hidden');
         document.getElementById('modal-guess').classList.add('flex');
     } else if (gameId === 3) {
         resetTicTac();
-        updateLiveBalance('Tic');
         document.getElementById('modal-tictac').classList.remove('hidden');
         document.getElementById('modal-tictac').classList.add('flex');
     } else if (gameId === 4) {
@@ -459,12 +445,6 @@ function startGame(gameId) {
     }
 }
 
-function updateLiveBalance(game) {
-    const balEl = document.getElementById('liveBalance' + game);
-    if (balEl) balEl.textContent = currentPlayer.balance + " TL";
-}
-
-// Taş Kağıt Makas
 function playRPS(choice) {
     const options = ['rock','paper','scissors'];
     const comp = options[Math.floor(Math.random()*3)];
@@ -482,7 +462,6 @@ function playRPS(choice) {
     setTimeout(hideModals, 2800);
 }
 
-// Sayı Tahmin
 function resetGuessGame() {
     secretNumber = Math.floor(Math.random() * 100) + 1;
     attemptsLeft = 5;
@@ -494,10 +473,7 @@ function makeGuess() {
     const guess = parseInt(document.getElementById('guessInput').value);
     const status = document.getElementById('guess-status');
 
-    if (!guess || guess < 1 || guess > 100) {
-        status.innerHTML = `<span class="text-red-400">1-100 arası gir!</span>`;
-        return;
-    }
+    if (!guess || guess < 1 || guess > 100) return status.innerHTML = `<span class="text-red-400">1-100 arası gir!</span>`;
 
     attemptsLeft--;
     if (guess === secretNumber) {
@@ -515,7 +491,6 @@ function makeGuess() {
     }
 }
 
-// Tic Tac Toe
 function resetTicTac() {
     tictacBoard = Array(9).fill(null);
     tictacGameOver = false;
@@ -618,7 +593,7 @@ function endTicTac(won) {
     setTimeout(hideModals, 2300);
 }
 
-// Zar Atma Oyunu
+// Zar Atma
 function rollDice() {
     const dice1 = Math.floor(Math.random() * 6) + 1;
     const dice2 = Math.floor(Math.random() * 6) + 1;
