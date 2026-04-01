@@ -34,7 +34,7 @@
             GİRİŞ YAP
         </button>
         
-        <p class="text-xs text-zinc-500 mt-6">Admin tarafından eklenen oyuncular giriş yapabilir.</p>
+        <p class="text-xs text-zinc-500 mt-6">Admin: admin / arap1905</p>
     </div>
 </div>
 
@@ -52,11 +52,13 @@
                 <span class="text-3xl">💰</span>
                 <div><span id="currentBalance" class="text-3xl font-bold text-green-400">0</span><span class="text-xs block">TL</span></div>
             </div>
+            <button onclick="showAdminLogin()" class="bg-yellow-400 hover:bg-yellow-300 text-black px-6 py-3 rounded-3xl font-bold">👑 ADMIN</button>
             <button onclick="logout()" class="bg-red-500 hover:bg-red-400 px-6 py-3 rounded-3xl font-bold">ÇIKIŞ</button>
         </div>
     </div>
 
     <div class="max-w-6xl mx-auto px-4 py-8">
+        <!-- NAV -->
         <div class="flex justify-center gap-3 mb-10 bg-zinc-900 p-2 rounded-3xl w-fit mx-auto">
             <button onclick="showSection(0)" id="nav-0" class="nav-btn px-10 py-4 rounded-3xl font-bold active">🏠 ANA SAYFA</button>
             <button onclick="showSection(1)" id="nav-1" class="nav-btn px-10 py-4 rounded-3xl font-bold">🎲 OYUNLAR</button>
@@ -117,7 +119,7 @@
     </div>
 </div>
 
-<!-- OYUN MODALLARI -->
+<!-- OYUN MODALLARI (RPS, Sayı Tahmin, Tic Tac Toe) -->
 <div id="modal-rps" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center z-[9999]">
     <div class="modal bg-zinc-900 rounded-3xl p-10 max-w-lg w-full mx-4 text-center" onclick="event.stopImmediatePropagation()">
         <h3 class="text-3xl mb-8">✊ Taş Kağıt Makas</h3>
@@ -167,7 +169,6 @@
         <h3 class="text-3xl text-center mb-8">👑 ADMIN GİRİŞİ</h3>
         <input id="adminPassword" type="password" placeholder="Admin Şifresi" class="w-full bg-black py-6 text-3xl text-center rounded-3xl mb-6">
         <button onclick="checkAdminPassword()" class="w-full py-6 bg-yellow-400 text-black rounded-3xl text-2xl font-bold">GİRİŞ YAP</button>
-        <p class="text-center text-xs text-zinc-500 mt-6">Şifre: admin123</p>
     </div>
 </div>
 
@@ -222,7 +223,7 @@ const playersRef = db.ref('players');
 
 let players = [];
 let currentPlayer = null;
-const ADMIN_PASSWORD = "admin123";
+const ADMIN_PASSWORD = "arap1905";
 
 // Oyun değişkenleri
 let secretNumber = 0;
@@ -232,39 +233,23 @@ let tictacGameOver = false;
 let todayGameCount = 0;
 let lastWinLog = [];
 
-// ==================== LOGIN ====================
-function loginPlayer() {
-    const name = document.getElementById('loginName').value.trim();
-    const pass = document.getElementById('loginPassword').value.trim();
-
-    if (!name || !pass) return alert("İsim ve şifre giriniz!");
-
-    const player = players.find(p => p.name.toLowerCase() === name.toLowerCase() && p.password === pass);
-
-    if (player) {
-        currentPlayer = player;
-        localStorage.setItem('currentPlayerId', player.id);
-        document.getElementById('loginScreen').classList.add('hidden');
-        document.getElementById('mainApp').classList.remove('hidden');
-        renderCurrentPlayer();
-        showSection(0);
-    } else {
-        alert("❌ Yanlış isim veya şifre!\nAdmin panelinden oyuncu eklediğinden emin ol.");
-    }
+// ==================== OTOMATİK ADMIN EKLEME ====================
+function createDefaultAdmin() {
+    const adminRef = playersRef.child("1");
+    adminRef.once('value', (snapshot) => {
+        if (!snapshot.exists()) {
+            adminRef.set({
+                id: 1,
+                name: "admin",
+                password: "arap1905",
+                balance: 5000,
+                wins: 0
+            });
+        }
+    });
 }
 
-function logout() {
-    if (confirm("Çıkış yapmak istediğinden emin misin?")) {
-        currentPlayer = null;
-        localStorage.removeItem('currentPlayerId');
-        document.getElementById('mainApp').classList.add('hidden');
-        document.getElementById('loginScreen').classList.remove('hidden');
-        document.getElementById('loginName').value = '';
-        document.getElementById('loginPassword').value = '';
-    }
-}
-
-// ==================== FIREBASE ====================
+// ==================== FIREBASE VERİ YÜKLEME ====================
 function loadPlayersFromFirebase() {
     playersRef.on('value', (snapshot) => {
         const data = snapshot.val();
@@ -283,7 +268,39 @@ function updatePlayerInFirebase() {
     }
 }
 
-// ==================== ADMIN ====================
+// ==================== LOGIN ====================
+function loginPlayer() {
+    const name = document.getElementById('loginName').value.trim();
+    const pass = document.getElementById('loginPassword').value.trim();
+
+    if (!name || !pass) return alert("İsim ve şifre giriniz!");
+
+    const player = players.find(p => p.name.toLowerCase() === name.toLowerCase() && p.password === pass);
+
+    if (player) {
+        currentPlayer = player;
+        localStorage.setItem('currentPlayerId', player.id);
+        document.getElementById('loginScreen').classList.add('hidden');
+        document.getElementById('mainApp').classList.remove('hidden');
+        renderCurrentPlayer();
+        showSection(0);
+    } else {
+        alert("❌ Yanlış isim veya şifre!");
+    }
+}
+
+function logout() {
+    if (confirm("Çıkış yapmak istediğinden emin misin?")) {
+        currentPlayer = null;
+        localStorage.removeItem('currentPlayerId');
+        document.getElementById('mainApp').classList.add('hidden');
+        document.getElementById('loginScreen').classList.remove('hidden');
+        document.getElementById('loginName').value = '';
+        document.getElementById('loginPassword').value = '';
+    }
+}
+
+// ==================== ADMIN PANEL ====================
 function showAdminLogin() {
     document.getElementById('adminLoginModal').classList.remove('hidden');
     document.getElementById('adminLoginModal').classList.add('flex');
@@ -330,7 +347,7 @@ window.addNewPlayer = function() {
 
     if (!name || !password) return alert("İsim ve şifre zorunludur!");
 
-    const newId = players.length ? Math.max(...players.map(p => p.id)) + 1 : 1;
+    const newId = players.length ? Math.max(...players.map(p => p.id)) + 1 : 2;
     const newPlayer = { id: newId, name, password, balance, wins: 0 };
 
     playersRef.child(newId).set(newPlayer);
@@ -554,6 +571,7 @@ function renderCurrentPlayer() {
 // ==================== BAŞLAT ====================
 window.onload = () => {
     loadPlayersFromFirebase();
+    createDefaultAdmin();   // Admin otomatik eklenir
 
     const savedId = localStorage.getItem('currentPlayerId');
     if (savedId) {
