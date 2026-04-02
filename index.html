@@ -2,29 +2,30 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>33OYUN</title>
+
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
 
 <style>
 body{background:#09090b;color:white}
-.card{transition:.2s}
-.card:hover{transform:scale(1.05)}
+.game:hover{transform:scale(1.08)}
 </style>
 </head>
 
 <body>
 
 <!-- LOGIN -->
-<div id="loginScreen" class="flex h-screen items-center justify-center">
-<div class="bg-zinc-900 p-10 rounded-3xl text-center">
+<div id="loginScreen" class="fixed inset-0 bg-black flex items-center justify-center">
+<div class="bg-zinc-900 p-10 rounded-3xl text-center w-80">
 <h1 class="text-4xl text-green-400 mb-6">🎮 33OYUN</h1>
 
-<input id="name" placeholder="İsim" class="p-3 text-black mb-2 w-full"><br>
-<input id="pass" placeholder="Şifre" class="p-3 text-black mb-4 w-full"><br>
+<input id="loginName" placeholder="İsim" class="w-full p-3 text-black mb-2">
+<input id="loginPass" type="password" placeholder="Şifre" class="w-full p-3 text-black mb-4">
 
-<button onclick="login()" class="bg-green-500 px-6 py-3 w-full">Giriş</button>
+<button onclick="login()" class="bg-green-500 w-full py-3">Giriş</button>
 </div>
 </div>
 
@@ -40,29 +41,26 @@ body{background:#09090b;color:white}
 
 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
 
-<div onclick="playRPS()" class="card bg-zinc-800 p-6 rounded-2xl text-center cursor-pointer">
-✊<br>Taş Kağıt
-</div>
-
-<div onclick="playGuess()" class="card bg-zinc-800 p-6 rounded-2xl text-center cursor-pointer">
-🎯<br>Sayı
-</div>
-
-<div onclick="playDice()" class="card bg-zinc-800 p-6 rounded-2xl text-center cursor-pointer">
-🎲<br>Zar
-</div>
-
-<div onclick="openAdmin()" class="card bg-yellow-500 text-black p-6 rounded-2xl text-center cursor-pointer">
-👑<br>Admin
-</div>
+<div onclick="startGame(1)" class="game bg-zinc-800 p-6 rounded-2xl text-center cursor-pointer">✊<br>RPS</div>
+<div onclick="startGame(2)" class="game bg-zinc-800 p-6 rounded-2xl text-center cursor-pointer">🎯<br>Guess</div>
+<div onclick="startGame(3)" class="game bg-zinc-800 p-6 rounded-2xl text-center cursor-pointer">❌<br>TicTac</div>
+<div onclick="startGame(4)" class="game bg-zinc-800 p-6 rounded-2xl text-center cursor-pointer">🎲<br>Zar</div>
 
 </div>
+
+<button onclick="openAdmin()" class="bg-yellow-500 text-black mt-6 px-6 py-3">ADMIN</button>
+
+</div>
+
+<!-- MODAL -->
+<div id="modal" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center">
+<div id="modalContent" class="bg-zinc-900 p-8 rounded-3xl text-center"></div>
 </div>
 
 <script>
-// 🔴 BURAYI SEN DOLDUR
+// FIREBASE
 const firebaseConfig = {
-   apiKey: "AIzaSyCs4uSsIC90spXTfZNE-dLtNbfr6QOtM7g",
+  apiKey: "AIzaSyCs4uSsIC90spXTfZNE-dLtNbfr6QOtM7g",
   authDomain: "oyun-93eb3.firebaseapp.com",
   databaseURL: "https://oyun-93eb3-default-rtdb.firebaseio.com",
   projectId: "oyun-93eb3",
@@ -87,13 +85,13 @@ ref.on("value", snap=>{
 
 // LOGIN
 function login(){
-    const n = name.value.trim();
-    const p = pass.value.trim();
+    const n = loginName.value.trim();
+    const p = loginPass.value.trim();
 
     let user = players.find(x=>x.name===n && x.password===p);
 
     if(!user){
-        user={
+        user = {
             id: Date.now(),
             name:n,
             password:p,
@@ -103,7 +101,7 @@ function login(){
         ref.child(user.id).set(user);
     }
 
-    me=user;
+    me = user;
 
     loginScreen.style.display="none";
     app.classList.remove("hidden");
@@ -130,64 +128,90 @@ function render(){
 
 // PAY
 function pay(){
-    if(me.balance<10){
-        alert("Para yok");
+    if(me.balance < 10){
+        alert("Yetersiz bakiye");
         return false;
     }
-    me.balance-=10;
+    me.balance -= 10;
     return true;
 }
 
-// OYUNLAR
-function playRPS(){
+// MODAL
+function openModal(html){
+    modalContent.innerHTML = html;
+    modal.classList.remove("hidden");
+}
+function closeModal(){
+    modal.classList.add("hidden");
+}
+
+// START GAME
+function startGame(id){
     if(!pay()) return;
 
+    if(id===1){
+        openModal(`
+        <h2 class="mb-4">Taş Kağıt Makas</h2>
+        <button onclick="rps()" class="bg-green-500 px-4 py-2">Oyna</button>
+        `);
+    }
+
+    if(id===2){
+        const g = prompt("1-10 tahmin");
+        const s = Math.floor(Math.random()*10)+1;
+
+        if(g==s){
+            me.balance+=30; me.wins++;
+            alert("Kazandın");
+        } else alert("Yanlış: "+s);
+
+        update(); render();
+    }
+
+    if(id===3){
+        openModal(`
+        <h2 class="mb-4">TicTacToe (basit)</h2>
+        <button onclick="tt()" class="bg-green-500 px-4 py-2">Oyna</button>
+        `);
+    }
+
+    if(id===4){
+        const t = Math.floor(Math.random()*12)+2;
+        if(t>=8){me.balance+=20; me.wins++; alert("Kazandın")}
+        else alert("Kaybettin");
+
+        update(); render();
+    }
+}
+
+// RPS
+function rps(){
     if(Math.random()>0.5){
-        me.balance+=25;
-        me.wins++;
+        me.balance+=25; me.wins++;
         alert("Kazandın");
     } else alert("Kaybettin");
 
     update(); render();
+    closeModal();
 }
 
-function playGuess(){
-    if(!pay()) return;
-
-    const s=Math.floor(Math.random()*10)+1;
-    const g=parseInt(prompt("1-10"));
-
-    if(g===s){
-        me.balance+=30;
-        me.wins++;
-        alert("Doğru");
-    } else alert("Yanlış: "+s);
-
-    update(); render();
-}
-
-function playDice(){
-    if(!pay()) return;
-
-    const t=Math.floor(Math.random()*12)+2;
-
-    if(t>=8){
-        me.balance+=20;
-        me.wins++;
+// TIC
+function tt(){
+    if(Math.random()>0.5){
+        me.balance+=25; me.wins++;
         alert("Kazandın");
     } else alert("Kaybettin");
 
     update(); render();
+    closeModal();
 }
 
 // ADMIN
 function openAdmin(){
-    const pass=prompt("Admin şifre");
-
-    if(pass!=="1234") return alert("Yanlış");
+    const pass = prompt("Admin şifre");
+    if(pass!=="arap1905") return alert("Yanlış");
 
     let txt="OYUNCULAR\n\n";
-
     players.forEach(p=>{
         txt+=p.name+" | "+p.balance+" TL\n";
     });
@@ -196,6 +220,5 @@ function openAdmin(){
 }
 
 </script>
-
 </body>
 </html>
