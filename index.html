@@ -1,669 +1,197 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>33OYUN • Arkadaş Eğlencesi</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-        body { font-family: 'Press Start 2P', system-ui; }
-        .game-card:hover { transform: scale(1.08) translateY(-8px); box-shadow: 0 0 40px #22c55e; }
-        .modal { animation: modalPop 0.4s ease; }
-        @keyframes modalPop { from { transform: scale(0.8) translateY(40px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
-    </style>
+<meta charset="UTF-8">
+<title>33OYUN</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+
+<style>
+body{background:#09090b;color:white}
+.card{transition:.2s}
+.card:hover{transform:scale(1.05)}
+</style>
 </head>
-<body class="bg-zinc-950 text-white min-h-screen">
 
-<!-- LOGIN EKRANI -->
-<div id="loginScreen" class="fixed inset-0 bg-black/95 flex items-center justify-center z-[10000]">
-    <div class="bg-zinc-900 rounded-3xl p-10 max-w-md w-full mx-4 text-center">
-        <div class="text-7xl mb-6">🎮</div>
-        <h1 class="text-5xl font-bold text-green-400 mb-8">33OYUN</h1>
-        <h2 class="text-2xl mb-8">Giriş Yap</h2>
-        
-        <input id="loginName" type="text" placeholder="Oyuncu Adı" 
-               class="w-full bg-black px-6 py-5 rounded-3xl text-lg mb-4 focus:outline-none">
-        <input id="loginPassword" type="password" placeholder="Şifre" 
-               class="w-full bg-black px-6 py-5 rounded-3xl text-lg mb-6 focus:outline-none">
-        
-        <button onclick="loginPlayer()" 
-                class="w-full py-6 bg-green-500 hover:bg-green-400 text-black text-2xl font-bold rounded-3xl">
-            GİRİŞ YAP
-        </button>
-    </div>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen" class="flex h-screen items-center justify-center">
+<div class="bg-zinc-900 p-10 rounded-3xl text-center">
+<h1 class="text-4xl text-green-400 mb-6">🎮 33OYUN</h1>
+
+<input id="name" placeholder="İsim" class="p-3 text-black mb-2 w-full"><br>
+<input id="pass" placeholder="Şifre" class="p-3 text-black mb-4 w-full"><br>
+
+<button onclick="login()" class="bg-green-500 px-6 py-3 w-full">Giriş</button>
+</div>
 </div>
 
-<!-- ANA UYGULAMA -->
-<div id="mainApp" class="hidden min-h-screen">
+<!-- APP -->
+<div id="app" class="hidden p-6">
 
-    <!-- HEADER -->
-    <div class="bg-black border-b-4 border-green-500 p-4 flex items-center justify-between sticky top-0 z-50">
-        <div class="flex items-center gap-4">
-            <div class="w-12 h-12 bg-green-500 text-black rounded-3xl flex items-center justify-center text-4xl">🎮</div>
-            <h1 class="text-3xl font-bold tracking-widest text-green-400">33OYUN</h1>
-        </div>
-
-        <div class="flex items-center gap-4">
-            <button onclick="toggleMobileMenu()" class="md:hidden text-4xl">☰</button>
-            
-            <div onclick="showBalanceModal()" class="hidden md:flex items-center gap-3 bg-zinc-900 hover:bg-green-500 hover:text-black px-6 py-3 rounded-3xl border-2 border-green-500 cursor-pointer">
-                <span class="text-3xl">💰</span>
-                <div><span id="currentBalance" class="text-3xl font-bold text-green-400">0</span><span class="text-xs block">TL</span></div>
-            </div>
-
-            <button onclick="showAdminLogin()" class="bg-yellow-400 hover:bg-yellow-300 text-black px-6 py-3 rounded-3xl font-bold">👑 ADMIN</button>
-            <button onclick="logout()" class="bg-red-500 hover:bg-red-400 px-6 py-3 rounded-3xl font-bold">ÇIKIŞ</button>
-        </div>
-    </div>
-
-    <!-- MOBİL MENÜ -->
-    <div id="mobileMenu" class="hidden md:hidden bg-zinc-900 border-b border-green-500 py-4">
-        <div class="flex flex-col px-6 space-y-4 text-lg">
-            <button onclick="showSection(0); toggleMobileMenu()" class="text-left py-3 hover:bg-zinc-800 rounded-2xl">🏠 Ana Sayfa</button>
-            <button onclick="showSection(1); toggleMobileMenu()" class="text-left py-3 hover:bg-zinc-800 rounded-2xl">🎲 Oyunlar</button>
-            <button onclick="showSection(2); toggleMobileMenu()" class="text-left py-3 hover:bg-zinc-800 rounded-2xl">💸 Para</button>
-            <button onclick="showBalanceModal(); toggleMobileMenu()" class="text-left py-3 hover:bg-zinc-800 rounded-2xl">💰 Bakiyem</button>
-        </div>
-    </div>
-
-    <div class="max-w-6xl mx-auto px-4 py-8">
-        <!-- ANA SAYFA -->
-        <div id="section-0" class="section">
-            <div class="text-center mb-12">
-                <h2 class="text-5xl mb-4 text-green-400">Hoş geldin, <span id="welcomeName" class="text-white"></span>!</h2>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="bg-zinc-900 rounded-3xl p-8 border border-green-500/30 text-center">
-                    <div class="text-6xl mb-4">🔥</div>
-                    <p class="text-green-400">BUGÜN OYNANAN</p>
-                    <p id="todayGames" class="text-7xl font-bold">0</p>
-                </div>
-                <div class="bg-zinc-900 rounded-3xl p-8 border border-green-500/30">
-                    <h3 class="text-green-400 mb-6">SON KAZANÇLAR</h3>
-                    <div id="lastWins" class="space-y-4"></div>
-                </div>
-                <div class="bg-gradient-to-br from-green-500 to-emerald-600 rounded-3xl p-8 flex flex-col justify-center items-center text-black">
-                    <button onclick="showSection(1)" class="bg-black text-white w-full py-6 rounded-3xl text-2xl font-bold">HEMEN OYNA →</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- OYUNLAR -->
-        <div id="section-1" class="section hidden">
-            <h2 class="text-4xl font-bold text-center mb-10 text-green-400">🎲 OYUNLAR (10 TL Giriş)</h2>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div onclick="startGame(1)" class="game-card bg-zinc-900 rounded-3xl p-8 border-2 border-green-500 cursor-pointer text-center">
-                    <div class="text-8xl mb-6">✊✋✌️</div>
-                    <h3 class="text-2xl font-bold">Taş Kağıt Makas</h3>
-                    <p class="text-zinc-400">+25 TL</p>
-                </div>
-                <div onclick="startGame(2)" class="game-card bg-zinc-900 rounded-3xl p-8 border-2 border-green-500 cursor-pointer text-center">
-                    <div class="text-8xl mb-6">🎯</div>
-                    <h3 class="text-2xl font-bold">Sayı Tahmin</h3>
-                    <p class="text-zinc-400">+30 TL</p>
-                </div>
-                <div onclick="startGame(3)" class="game-card bg-zinc-900 rounded-3xl p-8 border-2 border-green-500 cursor-pointer text-center">
-                    <div class="text-8xl mb-6">❌⭕</div>
-                    <h3 class="text-2xl font-bold">Tic Tac Toe</h3>
-                    <p class="text-zinc-400">+25 TL</p>
-                </div>
-                <div onclick="startGame(4)" class="game-card bg-zinc-900 rounded-3xl p-8 border-2 border-green-500 cursor-pointer text-center">
-                    <div class="text-8xl mb-6">🎲</div>
-                    <h3 class="text-2xl font-bold">Zar Atma</h3>
-                    <p class="text-zinc-400">+20 TL</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- PARA -->
-        <div id="section-2" class="section hidden">
-            <div class="max-w-xl mx-auto bg-zinc-900 rounded-3xl p-12 border border-green-500 text-center">
-                <h2 class="text-4xl mb-8 text-green-400">💰 BAKİYEN</h2>
-                <p id="bigBalance" class="text-8xl font-bold text-green-400 mb-10">0 TL</p>
-                <button onclick="fakeDeposit()" class="bg-green-500 hover:bg-green-400 text-black px-16 py-6 rounded-3xl text-2xl font-bold">PARA YATIR 📲</button>
-            </div>
-        </div>
-    </div>
+<div class="flex justify-between mb-6">
+<h2 id="welcome"></h2>
+<button onclick="logout()" class="bg-red-500 px-4 py-2">Çıkış</button>
 </div>
 
-<!-- OYUN MODALLARI -->
-<div id="modal-rps" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center z-[9999]">
-    <div class="modal bg-zinc-900 rounded-3xl p-10 max-w-lg w-full mx-4 text-center" onclick="event.stopImmediatePropagation()">
-        <h3 class="text-3xl mb-8">✊ Taş Kağıt Makas</h3>
-        <div class="flex justify-center gap-12 text-8xl mb-10">
-            <button onclick="playRPS('rock')" class="hover:scale-125 transition">✊</button>
-            <button onclick="playRPS('paper')" class="hover:scale-125 transition">✋</button>
-            <button onclick="playRPS('scissors')" class="hover:scale-125 transition">✌️</button>
-        </div>
-        <div id="rps-result" class="text-2xl min-h-20"></div>
-    </div>
+<div class="mb-6 text-xl">💰 Bakiye: <span id="balance"></span> TL</div>
+
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+
+<div onclick="playRPS()" class="card bg-zinc-800 p-6 rounded-2xl text-center cursor-pointer">
+✊<br>Taş Kağıt
 </div>
 
-<div id="modal-guess" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center z-[9999]">
-    <div class="modal bg-zinc-900 rounded-3xl p-10 max-w-md w-full mx-4 text-center" onclick="event.stopImmediatePropagation()">
-        <h3 class="text-3xl mb-6">🎯 Sayı Tahmin</h3>
-        <div class="flex gap-4">
-            <input id="guessInput" type="number" min="1" max="100" class="flex-1 bg-black text-6xl text-center rounded-3xl p-6">
-            <button onclick="makeGuess()" class="bg-green-500 text-black px-12 rounded-3xl font-bold">TAHMİN</button>
-        </div>
-        <div id="guess-status" class="mt-10 text-2xl min-h-28"></div>
-    </div>
+<div onclick="playGuess()" class="card bg-zinc-800 p-6 rounded-2xl text-center cursor-pointer">
+🎯<br>Sayı
 </div>
 
-<div id="modal-tictac" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center z-[9999]">
-    <div class="modal bg-zinc-900 rounded-3xl p-8 max-w-md w-full mx-4" onclick="event.stopImmediatePropagation()">
-        <h3 class="text-3xl mb-4">❌ Tic Tac Toe</h3>
-        <div id="tictac-status" class="text-center text-green-400 mb-6"></div>
-        <div id="board" class="grid grid-cols-3 gap-3 bg-black p-4 rounded-3xl"></div>
-        <div class="flex gap-4 mt-8">
-            <button onclick="resetTicTac()" class="flex-1 py-5 bg-zinc-800 rounded-3xl">YENİ OYUN</button>
-            <button onclick="hideModals()" class="flex-1 py-5 bg-red-500 text-black rounded-3xl">ÇIK</button>
-        </div>
-    </div>
+<div onclick="playDice()" class="card bg-zinc-800 p-6 rounded-2xl text-center cursor-pointer">
+🎲<br>Zar
 </div>
 
-<div id="modal-dice" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center z-[9999]">
-    <div class="modal bg-zinc-900 rounded-3xl p-10 max-w-md w-full mx-4 text-center" onclick="event.stopImmediatePropagation()">
-        <h3 class="text-3xl mb-8">🎲 Zar Atma</h3>
-        <div id="diceResult" class="text-8xl mb-8 min-h-[100px]"></div>
-        <button onclick="rollDice()" class="bg-green-500 text-black px-12 py-5 rounded-3xl text-xl font-bold mb-6">ZAR AT</button>
-        <div id="dice-status" class="text-xl"></div>
-    </div>
+<div onclick="openAdmin()" class="card bg-yellow-500 text-black p-6 rounded-2xl text-center cursor-pointer">
+👑<br>Admin
 </div>
 
-<!-- ADMIN LOGIN -->
-<div id="adminLoginModal" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center z-[9999]">
-    <div class="modal bg-zinc-900 rounded-3xl p-10 max-w-sm w-full mx-4">
-        <h3 class="text-3xl text-center mb-8">👑 ADMIN GİRİŞİ</h3>
-        <input id="adminPassword" type="password" placeholder="Admin Şifresi" class="w-full bg-black py-6 text-3xl text-center rounded-3xl mb-6">
-        <button onclick="checkAdminPassword()" class="w-full py-6 bg-yellow-400 text-black rounded-3xl text-2xl font-bold">GİRİŞ YAP</button>
-    </div>
 </div>
-
-<!-- ADMIN PANEL -->
-<div id="adminPanelModal" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center z-[9999]">
-    <div class="modal bg-zinc-900 rounded-3xl p-8 max-w-5xl w-full mx-4 max-h-[92vh] overflow-auto">
-        <div class="flex justify-between items-center mb-8">
-            <h3 class="text-4xl">👑 ADMIN PANELİ</h3>
-            <button onclick="hideModals()" class="text-5xl text-red-400">×</button>
-        </div>
-
-        <div class="bg-zinc-800 rounded-3xl p-6 mb-8">
-            <h4 class="text-green-400 mb-4">Yeni Oyuncu Ekle</h4>
-            <div class="flex flex-wrap gap-4">
-                <input id="newPlayerName" placeholder="Oyuncu Adı" class="flex-1 bg-black px-6 py-5 rounded-3xl text-lg">
-                <input id="newPlayerPassword" type="text" placeholder="Şifre" class="w-52 bg-black px-6 py-5 rounded-3xl text-center text-lg">
-                <input id="newPlayerBalance" type="number" value="0" class="w-52 bg-black px-6 py-5 rounded-3xl text-center text-lg">
-                <button onclick="addNewPlayer()" class="bg-green-500 hover:bg-green-400 text-black px-10 py-5 rounded-3xl font-bold">EKLE</button>
-            </div>
-        </div>
-
-        <table class="w-full">
-            <thead>
-                <tr class="border-b border-zinc-700 text-green-400">
-                    <th class="py-5 text-left">OYUNCU</th>
-                    <th class="py-5 text-left">ŞİFRE</th>
-                    <th class="py-5 text-left">BAKİYE</th>
-                    <th class="py-5 text-left">KAZANIM</th>
-                    <th class="py-5 text-center">EKLE</th>
-                    <th class="py-5 text-center">ÇIKAR</th>
-                    <th class="py-5 text-center">SİL</th>
-                </tr>
-            </thead>
-            <tbody id="adminTableBody"></tbody>
-        </table>
-    </div>
 </div>
 
 <script>
-// ==================== FIREBASE CONFIG ====================
+// 🔴 BURAYI SEN DOLDUR
 const firebaseConfig = {
-    apiKey: "AIzaSyCs4uSsIC90spXTfZNE-dLtNbfr6QOtM7g",
-    authDomain: "oyun-93eb3.firebaseapp.com",
-    projectId: "oyun-93eb3",
-    storageBucket: "oyun-93eb3.firebasestorage.app",
-    messagingSenderId: "231323391433",
-    appId: "1:231323391433:web:adb352e082ecfd2b720418",
-    measurementId: "G-JBHM3VF2K3"
+  apiKey: "BURAYA",
+  authDomain: "BURAYA",
+  databaseURL: "BURAYA",
+  projectId: "BURAYA"
 };
 
-const app = firebase.initializeApp(firebaseConfig);
+firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-const playersRef = db.ref('players');
+const ref = db.ref("players");
 
 let players = [];
-let currentPlayer = null;
-const ADMIN_PASSWORD = "arap1905";
+let me = null;
 
-// Oyun değişkenleri
-let secretNumber = 0;
-let attemptsLeft = 5;
-let tictacBoard = [];
-let tictacGameOver = false;
-let todayGameCount = 0;
-let lastWinLog = [];
+// LOAD
+ref.on("value", snap=>{
+    const data = snap.val();
+    players = data ? Object.values(data) : [];
+});
 
-// ==================== OTOMATİK ADMIN EKLEME ====================
-function createDefaultAdmin() {
-    playersRef.child("1").once('value', (snapshot) => {
-        if (!snapshot.exists()) {
-            playersRef.child("1").set({
-                id: 1,
-                name: "admin",
-                password: "arap1905",
-                balance: 5000,
-                wins: 0
-            });
-        }
+// LOGIN
+function login(){
+    const n = name.value.trim();
+    const p = pass.value.trim();
+
+    let user = players.find(x=>x.name===n && x.password===p);
+
+    if(!user){
+        user={
+            id: Date.now(),
+            name:n,
+            password:p,
+            balance:100,
+            wins:0
+        };
+        ref.child(user.id).set(user);
+    }
+
+    me=user;
+
+    loginScreen.style.display="none";
+    app.classList.remove("hidden");
+
+    welcome.innerText="Hoşgeldin "+me.name;
+    render();
+}
+
+// LOGOUT
+function logout(){location.reload()}
+
+// UPDATE
+function update(){
+    ref.child(me.id).update({
+        balance: me.balance,
+        wins: me.wins
     });
 }
 
-// ==================== FIREBASE ====================
-function loadPlayersFromFirebase() {
-    playersRef.on('value', (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-            players = Object.keys(data).map(key => ({ id: parseInt(key), ...data[key] }));
-        }
+// UI
+function render(){
+    balance.innerText = me.balance;
+}
+
+// PAY
+function pay(){
+    if(me.balance<10){
+        alert("Para yok");
+        return false;
+    }
+    me.balance-=10;
+    return true;
+}
+
+// OYUNLAR
+function playRPS(){
+    if(!pay()) return;
+
+    if(Math.random()>0.5){
+        me.balance+=25;
+        me.wins++;
+        alert("Kazandın");
+    } else alert("Kaybettin");
+
+    update(); render();
+}
+
+function playGuess(){
+    if(!pay()) return;
+
+    const s=Math.floor(Math.random()*10)+1;
+    const g=parseInt(prompt("1-10"));
+
+    if(g===s){
+        me.balance+=30;
+        me.wins++;
+        alert("Doğru");
+    } else alert("Yanlış: "+s);
+
+    update(); render();
+}
+
+function playDice(){
+    if(!pay()) return;
+
+    const t=Math.floor(Math.random()*12)+2;
+
+    if(t>=8){
+        me.balance+=20;
+        me.wins++;
+        alert("Kazandın");
+    } else alert("Kaybettin");
+
+    update(); render();
+}
+
+// ADMIN
+function openAdmin(){
+    const pass=prompt("Admin şifre");
+
+    if(pass!=="1234") return alert("Yanlış");
+
+    let txt="OYUNCULAR\n\n";
+
+    players.forEach(p=>{
+        txt+=p.name+" | "+p.balance+" TL\n";
     });
+
+    alert(txt);
 }
 
-function updatePlayerInFirebase(player) {
-    if (player) {
-        playersRef.child(player.id).update({
-            balance: player.balance,
-            wins: player.wins || 0
-        });
-    }
-}
-
-// ==================== LOGIN ====================
-function loginPlayer() {
-    const name = document.getElementById('loginName').value.trim();
-    const pass = document.getElementById('loginPassword').value.trim();
-
-    if (!name || !pass) return alert("İsim ve şifre giriniz!");
-
-    const player = players.find(p => p.name.toLowerCase() === name.toLowerCase() && p.password === pass);
-
-    if (player) {
-        currentPlayer = player;
-        localStorage.setItem('currentPlayerId', player.id);
-        document.getElementById('loginScreen').classList.add('hidden');
-        document.getElementById('mainApp').classList.remove('hidden');
-        renderCurrentPlayer();
-        showSection(0);
-    } else {
-        alert("❌ Yanlış isim veya şifre!");
-    }
-}
-
-function logout() {
-    if (confirm("Çıkış yapmak istediğinden emin misin?")) {
-        currentPlayer = null;
-        localStorage.removeItem('currentPlayerId');
-        document.getElementById('mainApp').classList.add('hidden');
-        document.getElementById('loginScreen').classList.remove('hidden');
-    }
-}
-
-// ==================== HAMBURGER MENÜ ====================
-function toggleMobileMenu() {
-    const menu = document.getElementById('mobileMenu');
-    menu.classList.toggle('hidden');
-}
-
-// ==================== ADMIN PANEL ====================
-function showAdminLogin() {
-    document.getElementById('adminLoginModal').classList.remove('hidden');
-    document.getElementById('adminLoginModal').classList.add('flex');
-}
-
-function checkAdminPassword() {
-    if (document.getElementById('adminPassword').value === ADMIN_PASSWORD) {
-        hideModals();
-        showAdminPanel();
-    } else {
-        alert("Yanlış admin şifresi!");
-    }
-}
-
-function showAdminPanel() {
-    document.getElementById('adminPanelModal').classList.remove('hidden');
-    document.getElementById('adminPanelModal').classList.add('flex');
-    renderAdminTable();
-}
-
-function renderAdminTable() {
-    const tbody = document.getElementById('adminTableBody');
-    tbody.innerHTML = '';
-    players.forEach(p => {
-        const tr = document.createElement('tr');
-        tr.className = 'border-b border-zinc-700 hover:bg-zinc-800';
-        tr.innerHTML = `
-            <td class="py-6">${p.name}</td>
-            <td class="py-6 text-yellow-400">${p.password}</td>
-            <td class="py-6 font-bold text-green-400">${p.balance} TL</td>
-            <td class="py-6">${p.wins || 0}</td>
-            <td class="py-6 text-center">
-                <input id="add${p.id}" type="number" placeholder="+" class="w-20 bg-black text-center py-2 rounded-2xl">
-                <button onclick="adminAdd(${p.id})" class="ml-1 bg-green-500 text-black px-4 py-2 rounded-2xl text-sm">EKLE</button>
-            </td>
-            <td class="py-6 text-center">
-                <input id="sub${p.id}" type="number" placeholder="-" class="w-20 bg-black text-center py-2 rounded-2xl">
-                <button onclick="adminSubtract(${p.id})" class="ml-1 bg-red-500 px-4 py-2 rounded-2xl text-sm">ÇIKAR</button>
-            </td>
-            <td class="py-6 text-center">
-                <button onclick="deletePlayer(${p.id})" class="text-red-400 text-3xl">🗑</button>
-            </td>
-        `;
-        tbody.appendChild(tr);
-    });
-}
-
-window.adminAdd = function(id) {
-    const amt = parseInt(document.getElementById('add' + id).value);
-    if (!amt || amt <= 0) return alert("Geçerli miktar girin!");
-    
-    const p = players.find(pl => pl.id === id);
-    if (p) {
-        p.balance += amt;
-        updatePlayerInFirebase(p);
-        renderAdminTable();
-        if (currentPlayer && currentPlayer.id === id) {
-            renderCurrentPlayer();
-        }
-    }
-};
-
-window.adminSubtract = function(id) {
-    const amt = parseInt(document.getElementById('sub' + id).value);
-    if (!amt || amt <= 0) return alert("Geçerli miktar girin!");
-    
-    const p = players.find(pl => pl.id === id);
-    if (p && p.balance >= amt) {
-        p.balance -= amt;
-        updatePlayerInFirebase(p);
-        renderAdminTable();
-        if (currentPlayer && currentPlayer.id === id) {
-            renderCurrentPlayer();
-        }
-    }
-};
-
-window.addNewPlayer = function() {
-    const name = document.getElementById('newPlayerName').value.trim();
-    const password = document.getElementById('newPlayerPassword').value.trim();
-    const balance = parseInt(document.getElementById('newPlayerBalance').value) || 0;
-
-    if (!name || !password) return alert("İsim ve şifre zorunludur!");
-
-    const newId = players.length ? Math.max(...players.map(p => p.id)) + 1 : 2;
-    const newPlayer = { id: newId, name, password, balance, wins: 0 };
-
-    playersRef.child(newId).set(newPlayer);
-    alert(`${name} eklendi!\nŞifre: ${password}`);
-    
-    document.getElementById('newPlayerName').value = '';
-    document.getElementById('newPlayerPassword').value = '';
-    document.getElementById('newPlayerBalance').value = '0';
-};
-
-window.deletePlayer = function(id) {
-    if (confirm("Bu oyuncuyu silmek istediğinden emin misin?")) {
-        playersRef.child(id).remove();
-    }
-};
-
-// ==================== OYUN FONKSİYONLARI ====================
-function startGame(gameId) {
-    if (!currentPlayer || currentPlayer.balance < 10) {
-        return alert("❌ Yetersiz bakiye! En az 10 TL gerekiyor.");
-    }
-    currentPlayer.balance -= 10;
-    todayGameCount++;
-    updatePlayerInFirebase();
-    renderCurrentPlayer();
-
-    if (gameId === 1) {
-        document.getElementById('rps-result').innerHTML = "Seçimini yap!";
-        document.getElementById('modal-rps').classList.remove('hidden');
-        document.getElementById('modal-rps').classList.add('flex');
-    } else if (gameId === 2) {
-        resetGuessGame();
-        document.getElementById('modal-guess').classList.remove('hidden');
-        document.getElementById('modal-guess').classList.add('flex');
-    } else if (gameId === 3) {
-        resetTicTac();
-        document.getElementById('modal-tictac').classList.remove('hidden');
-        document.getElementById('modal-tictac').classList.add('flex');
-    } else if (gameId === 4) {
-        document.getElementById('diceResult').innerHTML = '🎲';
-        document.getElementById('dice-status').innerHTML = '';
-        document.getElementById('modal-dice').classList.remove('hidden');
-        document.getElementById('modal-dice').classList.add('flex');
-    }
-}
-
-function playRPS(choice) {
-    const options = ['rock','paper','scissors'];
-    const comp = options[Math.floor(Math.random()*3)];
-    let result = '', change = 0;
-
-    if (choice === comp) { result = "BERABERE! +10 TL iade"; change = 10; }
-    else if ((choice==='rock'&&comp==='scissors') || (choice==='paper'&&comp==='rock') || (choice==='scissors'&&comp==='paper')) {
-        result = "🎉 KAZANDIN! +25 TL"; change = 25; currentPlayer.wins = (currentPlayer.wins || 0) + 1; lastWinLog.unshift({player: currentPlayer.name, amount: 25});
-    } else {
-        result = "😢 Kaybettin";
-    }
-    currentPlayer.balance += change;
-    updatePlayerInFirebase();
-    document.getElementById('rps-result').innerHTML = `<div class="text-4xl">${result}</div><div class="mt-4">Bakiye: ${currentPlayer.balance} TL</div>`;
-    setTimeout(hideModals, 2800);
-}
-
-function resetGuessGame() {
-    secretNumber = Math.floor(Math.random() * 100) + 1;
-    attemptsLeft = 5;
-    document.getElementById('guessInput').value = '';
-    document.getElementById('guess-status').innerHTML = '';
-}
-
-function makeGuess() {
-    const guess = parseInt(document.getElementById('guessInput').value);
-    const status = document.getElementById('guess-status');
-
-    if (!guess || guess < 1 || guess > 100) return status.innerHTML = `<span class="text-red-400">1-100 arası gir!</span>`;
-
-    attemptsLeft--;
-    if (guess === secretNumber) {
-        status.innerHTML = `<span class="text-green-400 text-5xl">🎉 DOĞRU!</span><br>+30 TL`;
-        currentPlayer.balance += 30;
-        currentPlayer.wins = (currentPlayer.wins || 0) + 1;
-        lastWinLog.unshift({player: currentPlayer.name, amount: 30});
-        updatePlayerInFirebase();
-        setTimeout(hideModals, 2500);
-    } else if (attemptsLeft <= 0) {
-        status.innerHTML = `Hakkın bitti! Sayı: ${secretNumber}`;
-        setTimeout(hideModals, 2000);
-    } else {
-        status.innerHTML = guess > secretNumber ? "📉 Daha küçük" : "📈 Daha büyük";
-    }
-}
-
-function resetTicTac() {
-    tictacBoard = Array(9).fill(null);
-    tictacGameOver = false;
-    const boardEl = document.getElementById('board');
-    boardEl.innerHTML = '';
-    for (let i = 0; i < 9; i++) {
-        const cell = document.createElement('div');
-        cell.className = 'aspect-square bg-zinc-900 text-7xl flex items-center justify-center cursor-pointer rounded-2xl border border-zinc-700';
-        cell.dataset.index = i;
-        cell.onclick = () => handleTicTacClick(i, cell);
-        boardEl.appendChild(cell);
-    }
-    document.getElementById('tictac-status').innerHTML = 'Sıra sende (X)';
-}
-
-function handleTicTacClick(index, cell) {
-    if (tictacGameOver || tictacBoard[index]) return;
-    tictacBoard[index] = 'X';
-    cell.textContent = 'X';
-    cell.style.color = '#22c55e';
-
-    if (checkWinner('X')) { endTicTac(true); return; }
-    if (tictacBoard.every(c => c)) { endTicTac(null); return; }
-
-    setTimeout(aiTicTacMove, 400);
-}
-
-function aiTicTacMove() {
-    let bestScore = -Infinity;
-    let bestMove = null;
-    for (let i = 0; i < 9; i++) {
-        if (!tictacBoard[i]) {
-            tictacBoard[i] = 'O';
-            let score = minimax(tictacBoard, false);
-            tictacBoard[i] = null;
-            if (score > bestScore) {
-                bestScore = score;
-                bestMove = i;
-            }
-        }
-    }
-    if (bestMove !== null) {
-        tictacBoard[bestMove] = 'O';
-        const cells = document.querySelectorAll('#board > div');
-        cells[bestMove].textContent = 'O';
-        cells[bestMove].style.color = '#eab308';
-        if (checkWinner('O')) endTicTac(false);
-        else if (tictacBoard.every(c => c)) endTicTac(null);
-        else document.getElementById('tictac-status').innerHTML = 'Sıra sende (X)';
-    }
-}
-
-function minimax(board, isMaximizing) {
-    if (checkWinner(board, 'O')) return 10;
-    if (checkWinner(board, 'X')) return -10;
-    if (board.every(cell => cell)) return 0;
-
-    if (isMaximizing) {
-        let best = -Infinity;
-        for (let i = 0; i < 9; i++) {
-            if (!board[i]) {
-                board[i] = 'O';
-                best = Math.max(best, minimax(board, false));
-                board[i] = null;
-            }
-        }
-        return best;
-    } else {
-        let best = Infinity;
-        for (let i = 0; i < 9; i++) {
-            if (!board[i]) {
-                board[i] = 'X';
-                best = Math.min(best, minimax(board, true));
-                board[i] = null;
-            }
-        }
-        return best;
-    }
-}
-
-function checkWinner(board, mark) {
-    const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-    return wins.some(combo => combo.every(i => board[i] === mark));
-}
-
-function endTicTac(won) {
-    tictacGameOver = true;
-    if (won === true) {
-        currentPlayer.balance += 25;
-        currentPlayer.wins = (currentPlayer.wins || 0) + 1;
-        lastWinLog.unshift({player: currentPlayer.name, amount: 25});
-        document.getElementById('tictac-status').innerHTML = '🎉 KAZANDIN +25 TL';
-    } else if (won === false) {
-        document.getElementById('tictac-status').innerHTML = '😢 Kaybettin';
-    } else {
-        currentPlayer.balance += 10;
-        document.getElementById('tictac-status').innerHTML = 'Berabere • 10 TL iade';
-    }
-    updatePlayerInFirebase();
-    setTimeout(hideModals, 2300);
-}
-
-// Zar Atma
-function rollDice() {
-    const dice1 = Math.floor(Math.random() * 6) + 1;
-    const dice2 = Math.floor(Math.random() * 6) + 1;
-    const total = dice1 + dice2;
-
-    document.getElementById('diceResult').innerHTML = `${dice1} + ${dice2} = <span class="text-6xl">${total}</span>`;
-
-    if (total >= 8) {
-        currentPlayer.balance += 20;
-        document.getElementById('dice-status').innerHTML = `<span class="text-green-400">🎉 Kazandın! +20 TL</span>`;
-        lastWinLog.unshift({player: currentPlayer.name, amount: 20});
-    } else {
-        document.getElementById('dice-status').innerHTML = `<span class="text-red-400">Kaybettin</span>`;
-    }
-    updatePlayerInFirebase();
-    renderCurrentPlayer();
-}
-
-// ==================== DİĞER FONKSİYONLAR ====================
-function showSection(n) {
-    document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
-    document.getElementById('section-' + n).classList.remove('hidden');
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('nav-' + n).classList.add('active');
-}
-
-function showBalanceModal() {
-    if (!currentPlayer) return;
-    document.getElementById('modalBalanceBig').textContent = currentPlayer.balance + " TL";
-    document.getElementById('balanceModal').classList.remove('hidden');
-    document.getElementById('balanceModal').classList.add('flex');
-}
-
-function fakeDeposit() {
-    alert("✅ Para yatırma talebi alındı!\nAdmin panelinden bakiyeni güncelleyebilirsin.");
-}
-
-function hideModals() {
-    document.querySelectorAll('[id^="modal-"]').forEach(m => m.classList.add('hidden'));
-    renderCurrentPlayer();
-}
-
-function renderCurrentPlayer() {
-    if (!currentPlayer) return;
-    document.getElementById('welcomeName').textContent = currentPlayer.name;
-    document.getElementById('currentBalance').textContent = currentPlayer.balance;
-    document.getElementById('bigBalance').textContent = currentPlayer.balance + " TL";
-}
-
-// ==================== BAŞLAT ====================
-window.onload = () => {
-    loadPlayersFromFirebase();
-    createDefaultAdmin();
-
-    const savedId = localStorage.getItem('currentPlayerId');
-    if (savedId) {
-        setTimeout(() => {
-            const player = players.find(p => p.id === parseInt(savedId));
-            if (player) {
-                currentPlayer = player;
-                document.getElementById('loginScreen').classList.add('hidden');
-                document.getElementById('mainApp').classList.remove('hidden');
-                renderCurrentPlayer();
-            }
-        }, 800);
-    }
-};
 </script>
+
 </body>
 </html>
