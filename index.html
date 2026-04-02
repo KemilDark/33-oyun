@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>33OYUN</title>
+<title>33OYUN PRO</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
@@ -11,14 +11,14 @@
 
 <style>
 body{background:#09090b;color:white}
-.game:hover{transform:scale(1.08)}
+.card:hover{transform:scale(1.07)}
 </style>
 </head>
 
 <body>
 
 <!-- LOGIN -->
-<div id="loginScreen" class="fixed inset-0 bg-black flex items-center justify-center">
+<div id="loginScreen" class="fixed inset-0 flex items-center justify-center bg-black">
 <div class="bg-zinc-900 p-10 rounded-3xl text-center w-80">
 <h1 class="text-4xl text-green-400 mb-6">🎮 33OYUN</h1>
 
@@ -41,20 +41,14 @@ body{background:#09090b;color:white}
 
 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
 
-<div onclick="startGame(1)" class="game bg-zinc-800 p-6 rounded-2xl text-center cursor-pointer">✊<br>RPS</div>
-<div onclick="startGame(2)" class="game bg-zinc-800 p-6 rounded-2xl text-center cursor-pointer">🎯<br>Guess</div>
-<div onclick="startGame(3)" class="game bg-zinc-800 p-6 rounded-2xl text-center cursor-pointer">❌<br>TicTac</div>
-<div onclick="startGame(4)" class="game bg-zinc-800 p-6 rounded-2xl text-center cursor-pointer">🎲<br>Zar</div>
+<div onclick="playRPS()" class="card bg-zinc-800 p-6 rounded-2xl text-center cursor-pointer">✊<br>RPS</div>
+<div onclick="startGuess()" class="card bg-zinc-800 p-6 rounded-2xl text-center cursor-pointer">🎯<br>Guess</div>
+<div onclick="playDice()" class="card bg-zinc-800 p-6 rounded-2xl text-center cursor-pointer">🎲<br>Zar</div>
+
+<div onclick="openAdmin()" class="card bg-yellow-500 text-black p-6 rounded-2xl text-center cursor-pointer">👑<br>Admin</div>
 
 </div>
 
-<button onclick="openAdmin()" class="bg-yellow-500 text-black mt-6 px-6 py-3">ADMIN</button>
-
-</div>
-
-<!-- MODAL -->
-<div id="modal" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center">
-<div id="modalContent" class="bg-zinc-900 p-8 rounded-3xl text-center"></div>
 </div>
 
 <script>
@@ -66,8 +60,7 @@ const firebaseConfig = {
   projectId: "oyun-93eb3",
   storageBucket: "oyun-93eb3.firebasestorage.app",
   messagingSenderId: "231323391433",
-  appId: "1:231323391433:web:adb352e082ecfd2b720418",
-  measurementId: "G-JBHM3VF2K3"
+  appId: "1:231323391433:web:adb352e082ecfd2b720418"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -79,8 +72,7 @@ let me = null;
 
 // LOAD
 ref.on("value", snap=>{
-    const data = snap.val();
-    players = data ? Object.values(data) : [];
+    players = snap.val() ? Object.values(snap.val()) : [];
 });
 
 // LOGIN
@@ -91,17 +83,11 @@ function login(){
     let user = players.find(x=>x.name===n && x.password===p);
 
     if(!user){
-        user = {
-            id: Date.now(),
-            name:n,
-            password:p,
-            balance:100,
-            wins:0
-        };
+        user={id:Date.now(),name:n,password:p,balance:100,wins:0};
         ref.child(user.id).set(user);
     }
 
-    me = user;
+    me=user;
 
     loginScreen.style.display="none";
     app.classList.remove("hidden");
@@ -110,7 +96,6 @@ function login(){
     render();
 }
 
-// LOGOUT
 function logout(){location.reload()}
 
 // UPDATE
@@ -122,101 +107,113 @@ function update(){
 }
 
 // UI
-function render(){
-    balance.innerText = me.balance;
-}
+function render(){balance.innerText=me.balance}
 
-// PAY
+// ================= OYUNLAR =================
+
 function pay(){
-    if(me.balance < 10){
-        alert("Yetersiz bakiye");
-        return false;
-    }
-    me.balance -= 10;
-    return true;
-}
-
-// MODAL
-function openModal(html){
-    modalContent.innerHTML = html;
-    modal.classList.remove("hidden");
-}
-function closeModal(){
-    modal.classList.add("hidden");
-}
-
-// START GAME
-function startGame(id){
-    if(!pay()) return;
-
-    if(id===1){
-        openModal(`
-        <h2 class="mb-4">Taş Kağıt Makas</h2>
-        <button onclick="rps()" class="bg-green-500 px-4 py-2">Oyna</button>
-        `);
-    }
-
-    if(id===2){
-        const g = prompt("1-10 tahmin");
-        const s = Math.floor(Math.random()*10)+1;
-
-        if(g==s){
-            me.balance+=30; me.wins++;
-            alert("Kazandın");
-        } else alert("Yanlış: "+s);
-
-        update(); render();
-    }
-
-    if(id===3){
-        openModal(`
-        <h2 class="mb-4">TicTacToe (basit)</h2>
-        <button onclick="tt()" class="bg-green-500 px-4 py-2">Oyna</button>
-        `);
-    }
-
-    if(id===4){
-        const t = Math.floor(Math.random()*12)+2;
-        if(t>=8){me.balance+=20; me.wins++; alert("Kazandın")}
-        else alert("Kaybettin");
-
-        update(); render();
-    }
+    if(me.balance<10){alert("Yetersiz bakiye");return false}
+    me.balance-=10; return true;
 }
 
 // RPS
-function rps(){
-    if(Math.random()>0.5){
-        me.balance+=25; me.wins++;
-        alert("Kazandın");
-    } else alert("Kaybettin");
+function playRPS(){
+    if(!pay()) return;
+
+    const win = Math.random()>0.5;
+
+    if(win){me.balance+=25;me.wins++;alert("Kazandın")}
+    else alert("Kaybettin");
 
     update(); render();
-    closeModal();
 }
 
-// TIC
-function tt(){
-    if(Math.random()>0.5){
-        me.balance+=25; me.wins++;
-        alert("Kazandın");
-    } else alert("Kaybettin");
+// GUESS
+function startGuess(){
+    if(!pay()) return;
+
+    let secret=Math.floor(Math.random()*20)+1;
+    let hak=5;
+
+    while(hak>0){
+        let g=parseInt(prompt("1-20 tahmin ("+hak+" hak)"));
+        if(g===secret){
+            me.balance+=30;me.wins++;
+            alert("Doğru!");
+            break;
+        }
+        hak--;
+    }
+
+    if(hak===0) alert("Bitti sayı: "+secret);
 
     update(); render();
-    closeModal();
 }
 
-// ADMIN
+// DICE
+function playDice(){
+    if(!pay()) return;
+
+    let t=Math.floor(Math.random()*12)+2;
+    if(t>=8){me.balance+=20;me.wins++;alert("Kazandın")}
+    else alert("Kaybettin");
+
+    update(); render();
+}
+
+// ================= ADMIN =================
+
 function openAdmin(){
-    const pass = prompt("Admin şifre");
+    const pass=prompt("Admin şifre");
     if(pass!=="arap1905") return alert("Yanlış");
 
-    let txt="OYUNCULAR\n\n";
-    players.forEach(p=>{
-        txt+=p.name+" | "+p.balance+" TL\n";
-    });
+    let menu=prompt(
+`1-Oyuncular
+2-Oyuncu ekle
+3-Sil
+4-Bakiye ekle
+5-Bakiye çıkar`);
 
-    alert(txt);
+    if(menu=="1"){
+        let txt="";
+        players.forEach(p=>txt+=p.name+" | "+p.balance+" TL\n");
+        alert(txt);
+    }
+
+    if(menu=="2"){
+        let n=prompt("İsim");
+        let p=prompt("Şifre");
+
+        let id=Date.now();
+        ref.child(id).set({id,name:n,password:p,balance:0,wins:0});
+    }
+
+    if(menu=="3"){
+        let id=prompt("Silinecek ID");
+        ref.child(id).remove();
+    }
+
+    if(menu=="4"){
+        let id=prompt("ID");
+        let amt=parseInt(prompt("Miktar"));
+
+        let pl=players.find(x=>x.id==id);
+        if(pl){
+            pl.balance+=amt;
+            ref.child(pl.id).update({balance:pl.balance});
+        }
+    }
+
+    if(menu=="5"){
+        let id=prompt("ID");
+        let amt=parseInt(prompt("Miktar"));
+
+        let pl=players.find(x=>x.id==id);
+        if(pl){
+            pl.balance-=amt;
+            ref.child(pl.id).update({balance:pl.balance});
+        }
+    }
 }
 
 </script>
