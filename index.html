@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>33-OYUN</title>
+<title>33OYUN MAX</title>
 
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
@@ -11,47 +11,45 @@
 
 <style>
 body{
-    background: radial-gradient(circle at top, #0f172a, #020617);
-    color:white;
-    font-family: sans-serif;
+background: radial-gradient(circle at top,#0f172a,#020617);
+color:white;
+font-family:sans-serif;
 }
 
-/* GLASS */
+/* CAM */
 .glass{
-    background: rgba(255,255,255,0.05);
-    backdrop-filter: blur(12px);
-    border:1px solid rgba(255,255,255,0.1);
+background:rgba(255,255,255,0.05);
+backdrop-filter:blur(15px);
+border:1px solid rgba(255,255,255,0.1);
 }
 
-/* CARD */
+/* KART */
 .card{
-    transition:0.3s;
+transition:.3s;
 }
 .card:hover{
-    transform:translateY(-10px) scale(1.05);
-    box-shadow:0 0 25px #22c55e;
+transform:translateY(-10px) scale(1.05);
+box-shadow:0 0 25px #22c55e;
 }
 
-/* BUTTON */
+/* BUTON */
 .btn{
-    background:#22c55e;
-    color:black;
-    padding:10px 20px;
-    border-radius:15px;
-    font-weight:bold;
-    transition:0.2s;
+background:#22c55e;
+color:black;
+padding:10px 20px;
+border-radius:15px;
+font-weight:bold;
+transition:.2s;
 }
-.btn:hover{
-    background:#4ade80;
-}
+.btn:hover{background:#4ade80}
 
 /* INPUT */
 .input{
-    background:black;
-    padding:12px;
-    border-radius:15px;
-    width:100%;
-    margin-bottom:10px;
+background:black;
+padding:12px;
+border-radius:12px;
+width:100%;
+margin-bottom:10px;
 }
 </style>
 </head>
@@ -60,46 +58,43 @@ body{
 
 <!-- LOGIN -->
 <div id="loginScreen" class="fixed inset-0 flex items-center justify-center">
-<div class="glass p-10 rounded-3xl w-80 text-center shadow-2xl">
+<div class="glass p-10 rounded-3xl w-80 text-center">
 <h1 class="text-4xl text-green-400 mb-6">🎮 33OYUN</h1>
-
 <input id="loginName" placeholder="İsim" class="input">
 <input id="loginPass" type="password" placeholder="Şifre" class="input">
-
-<button onclick="login()" class="btn w-full">Giriş Yap</button>
+<button onclick="login()" class="btn w-full">Giriş</button>
 </div>
 </div>
 
 <!-- APP -->
 <div id="app" class="hidden p-6">
 
-<div class="flex justify-between items-center mb-8">
-<h2 id="welcome" class="text-2xl text-green-400"></h2>
+<div class="flex justify-between mb-6">
+<h2 id="welcome" class="text-green-400 text-xl"></h2>
 <button onclick="logout()" class="bg-red-500 px-4 py-2 rounded-xl">Çıkış</button>
 </div>
 
-<div class="text-xl mb-6">💰 Bakiye: <span id="balance" class="text-green-400"></span> TL</div>
+<div class="text-xl mb-6">💰 <span id="balance"></span> TL</div>
 
 <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
 
-<div onclick="playRPS()" class="card glass p-6 rounded-2xl text-center cursor-pointer">
-<div class="text-5xl mb-2">✊</div>
+<div onclick="playRPS()" class="card glass p-6 text-center cursor-pointer">
+<div id="rpsIcon" class="text-5xl mb-2">✊</div>
 Taş Kağıt
 </div>
 
-<div onclick="startGuess()" class="card glass p-6 rounded-2xl text-center cursor-pointer">
+<div onclick="startGuess()" class="card glass p-6 text-center cursor-pointer">
 <div class="text-5xl mb-2">🎯</div>
 Sayı Tahmin
 </div>
 
-<div onclick="playDice()" class="card glass p-6 rounded-2xl text-center cursor-pointer">
-<div class="text-5xl mb-2">🎲</div>
+<div onclick="playDice()" class="card glass p-6 text-center cursor-pointer">
+<div id="diceIcon" class="text-5xl mb-2">🎲</div>
 Zar
 </div>
 
-<div onclick="openAdmin()" class="card glass p-6 rounded-2xl text-center cursor-pointer bg-yellow-400 text-black">
-<div class="text-5xl mb-2">👑</div>
-Admin
+<div onclick="openAdmin()" class="card glass bg-yellow-400 text-black p-6 text-center cursor-pointer">
+👑 Admin
 </div>
 
 </div>
@@ -108,22 +103,43 @@ Admin
 
 <!-- ADMIN PANEL -->
 <div id="adminPanel" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center">
-<div class="glass p-8 rounded-3xl w-full max-w-3xl">
+<div class="glass p-8 rounded-3xl w-full max-w-4xl overflow-auto">
 
 <h2 class="text-3xl mb-6 text-green-400">Admin Panel</h2>
 
-<div class="flex gap-2 mb-4">
+<!-- EKLE -->
+<div class="mb-6">
+<h3 class="text-green-400 mb-2">Oyuncu Ekle</h3>
 <input id="newName" placeholder="İsim" class="input">
 <input id="newPass" placeholder="Şifre" class="input">
 <button onclick="addPlayer()" class="btn">Ekle</button>
 </div>
 
+<!-- PARA -->
+<div class="mb-6">
+<h3 class="text-green-400 mb-2">Bakiye İşlemleri</h3>
+<input id="moneyId" placeholder="Oyuncu ID" class="input">
+<input id="moneyAmt" placeholder="Miktar" class="input">
+<div class="flex gap-2">
+<button onclick="addMoney()" class="btn">Para Ekle</button>
+<button onclick="subMoney()" class="bg-red-500 px-4 py-2 rounded-xl">Para Sil</button>
+</div>
+</div>
+
+<!-- SİL -->
+<div class="mb-6">
+<h3 class="text-green-400 mb-2">Oyuncu Sil</h3>
+<input id="delId" placeholder="Oyuncu ID" class="input">
+<button onclick="delPlayer()" class="bg-red-600 px-4 py-2 rounded-xl">Sil</button>
+</div>
+
+<!-- LİSTE -->
 <table class="w-full text-left">
 <thead>
 <tr class="text-green-400">
+<th>ID</th>
 <th>İsim</th>
 <th>Bakiye</th>
-<th>İşlem</th>
 </tr>
 </thead>
 <tbody id="adminTable"></tbody>
@@ -140,7 +156,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyCs4uSsIC90spXTfZNE-dLtNbfr6QOtM7g",
   authDomain: "oyun-93eb3.firebaseapp.com",
   databaseURL: "https://oyun-93eb3-default-rtdb.firebaseio.com",
-  projectId: "oyun-93eb3",
+  projectId: "oyun-93eb3"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -150,110 +166,124 @@ const ref = db.ref("players");
 let players=[], me=null;
 
 ref.on("value", s=>{
-    players = s.val()?Object.values(s.val()):[];
-    renderAdmin();
+players=s.val()?Object.values(s.val()):[];
+renderAdmin();
 });
 
 // LOGIN
 function login(){
-    let n=loginName.value,p=loginPass.value;
-
-    let u=players.find(x=>x.name==n && x.password==p);
-    if(!u){
-        u={id:Date.now(),name:n,password:p,balance:100,wins:0};
-        ref.child(u.id).set(u);
-    }
-
-    me=u;
-    loginScreen.style.display="none";
-    app.classList.remove("hidden");
-    welcome.innerText="Hoşgeldin "+me.name;
-    render();
+let n=loginName.value,p=loginPass.value;
+let u=players.find(x=>x.name==n&&x.password==p);
+if(!u){
+u={id:Date.now(),name:n,password:p,balance:100,wins:0};
+ref.child(u.id).set(u);
+}
+me=u;
+loginScreen.style.display="none";
+app.classList.remove("hidden");
+welcome.innerText="Hoşgeldin "+me.name;
+render();
 }
 
-// UI
+function logout(){location.reload()}
 function render(){balance.innerText=me.balance}
-
-// UPDATE
 function update(){ref.child(me.id).update({balance:me.balance})}
 
-// OYUNLAR
 function pay(){
 if(me.balance<10){alert("Para yok");return false}
 me.balance-=10;return true;
 }
 
+// 🎮 RPS ANİMASYON
 function playRPS(){
 if(!pay())return;
-if(Math.random()>0.5){me.balance+=25;alert("Kazandın")}else alert("Kaybettin");
+
+let icons=["✊","✋","✌️"];
+let i=0;
+let anim=setInterval(()=>{
+rpsIcon.innerText=icons[i%3];
+i++;
+},100);
+
+setTimeout(()=>{
+clearInterval(anim);
+let win=Math.random()>0.5;
+if(win){me.balance+=25;alert("Kazandın")}
+else alert("Kaybettin");
 update();render();
+},1000);
 }
 
+// 🎯 GUESS
 function startGuess(){
 if(!pay())return;
 let s=Math.floor(Math.random()*20)+1;
 let g=prompt("1-20 tahmin");
-if(g==s){me.balance+=30;alert("Doğru")}else alert("Yanlış:"+s);
+if(g==s){me.balance+=30;alert("Doğru")}
+else alert("Yanlış:"+s);
 update();render();
 }
 
+// 🎲 DICE ANİMASYON
 function playDice(){
 if(!pay())return;
+
+let i=0;
+let anim=setInterval(()=>{
+diceIcon.innerText=Math.floor(Math.random()*6)+1;
+i++;
+},100);
+
+setTimeout(()=>{
+clearInterval(anim);
 let t=Math.floor(Math.random()*12)+2;
-if(t>=8){me.balance+=20;alert("Kazandın")}else alert("Kaybettin");
+if(t>=8){me.balance+=20;alert("Kazandın")}
+else alert("Kaybettin");
 update();render();
+},1000);
 }
 
 // ADMIN
 function openAdmin(){
 let pass=prompt("Şifre");
 if(pass!=="arap1905")return alert("Yanlış");
-
 adminPanel.classList.remove("hidden");
 }
-
 function closeAdmin(){adminPanel.classList.add("hidden")}
 
 function renderAdmin(){
 let html="";
 players.forEach(p=>{
-html+=`
-<tr>
+html+=`<tr>
+<td>${p.id}</td>
 <td>${p.name}</td>
 <td>${p.balance}</td>
-<td>
-<button onclick="addMoney(${p.id})" class="text-green-400">+</button>
-<button onclick="subMoney(${p.id})" class="text-red-400">-</button>
-<button onclick="del(${p.id})" class="text-red-600">X</button>
-</td>
 </tr>`;
 });
 adminTable.innerHTML=html;
 }
 
 function addPlayer(){
-let n=newName.value,p=newPass.value;
 let id=Date.now();
-ref.child(id).set({id,name:n,password:p,balance:0});
+ref.child(id).set({id,name:newName.value,password:newPass.value,balance:0});
 }
 
-function addMoney(id){
-let amt=parseInt(prompt("Miktar"));
+function addMoney(){
+let id=moneyId.value,amt=parseInt(moneyAmt.value);
 let p=players.find(x=>x.id==id);
-p.balance+=amt;
-ref.child(id).update({balance:p.balance});
+if(p){p.balance+=amt;ref.child(id).update({balance:p.balance})}
 }
 
-function subMoney(id){
-let amt=parseInt(prompt("Miktar"));
+function subMoney(){
+let id=moneyId.value,amt=parseInt(moneyAmt.value);
 let p=players.find(x=>x.id==id);
-p.balance-=amt;
-ref.child(id).update({balance:p.balance});
+if(p){p.balance-=amt;ref.child(id).update({balance:p.balance})}
 }
 
-function del(id){ref.child(id).remove()}
-
-function logout(){location.reload()}
+function delPlayer(){
+let id=delId.value;
+ref.child(id).remove();
+}
 </script>
 
 </body>
