@@ -1,5 +1,4 @@
-{
-  "name": "33OYUN",
+ "name": "33OYUN",
   "short_name": "33OYUN",
   "start_url": "/index.html",
   "display": "standalone",
@@ -16,5 +15,7 @@
       "sizes": "512x512",
       "type": "image/png"
     }
-  ]
+  ],
+  "id": "33",
+  "description": "33 oyun sanal oyundur"
 }
